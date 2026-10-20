@@ -21,15 +21,17 @@
       padding: 15px;
       box-sizing: border-box;
       user-select: none;
+      overflow: hidden;
     }
     .header {
       text-align: center;
     }
     .score-container {
-      font-size: 36px;
+      font-size: 38px;
       font-weight: 800;
       color: #ffd700;
       margin-top: 5px;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
     }
     .click-area {
       position: relative;
@@ -44,16 +46,17 @@
       border-radius: 50%;
       background: radial-gradient(circle, #ffcc00 0%, #d4af37 100%);
       border: 8px solid #fff3a0;
-      box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
       font-size: 65px;
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      transition: transform 0.05s ease;
+      transition: transform 0.05s ease, box-shadow 0.1s ease;
     }
     .coin-btn:active {
-      transform: scale(0.92);
+      transform: scale(0.90) rotate(-3deg);
+      box-shadow: 0 0 40px rgba(255, 215, 0, 0.9);
     }
     .stats {
       width: 100%;
@@ -94,8 +97,10 @@
       font-size: 12px;
       cursor: pointer;
       text-align: center;
+      transition: transform 0.1s;
     }
     .upgrade-btn:active {
+      transform: scale(0.95);
       opacity: 0.8;
     }
     .btn-ad { background: #28a745; border-color: #28a745; }
@@ -105,15 +110,17 @@
     
     .floating-text {
       position: absolute;
-      font-size: 24px;
-      font-weight: bold;
+      font-size: 26px;
+      font-weight: 800;
       color: #ffd700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
       pointer-events: none;
-      animation: floatUp 0.8s ease-out forwards;
+      animation: floatUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     }
     @keyframes floatUp {
-      0% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-50px); }
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      50% { opacity: 1; transform: translateY(-30px) scale(1.2); }
+      100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
     }
 
     /* Modais */
@@ -236,7 +243,7 @@
       <div class="rank-list">
         <div class="rank-item">
           <span>📅 Bónus Diário</span>
-          <button class="task-task-btn-action" id="daily-btn" onclick="claimDaily()">+300 🪙</button>
+          <button class="task-btn-action" id="daily-btn" onclick="claimDaily()">+300 🪙</button>
         </div>
       </div>
       <button class="close-btn" onclick="fecharTarefas()">Fechar</button>
@@ -246,6 +253,37 @@
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
+
+    // Sistema Áudio Web API integrado
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'tap') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      } else if (type === 'buy') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      }
+    }
 
     let userName = "Jogador";
     const user = tg.initDataUnsafe?.user;
@@ -297,6 +335,8 @@
       score += clickPower;
       energy -= clickPower;
 
+      playSound('tap');
+
       if (tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('light');
       }
@@ -318,6 +358,7 @@
         score -= multCost;
         clickPower += 1;
         multCost = Math.floor(multCost * 1.5);
+        playSound('buy');
         updateUI();
       }
     }
@@ -327,6 +368,7 @@
         score -= autoCost;
         autoClick += 1;
         autoCost = Math.floor(autoCost * 1.8);
+        playSound('buy');
         updateUI();
       }
     }
@@ -335,14 +377,17 @@
       if (AdController) {
         AdController.show().then(() => {
           energy = 100;
+          playSound('buy');
           updateUI();
           if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         }).catch(() => {
           energy = 100;
+          playSound('buy');
           updateUI();
         });
       } else {
         energy = 100;
+        playSound('buy');
         updateUI();
       }
     }
@@ -357,6 +402,7 @@
       if (lastDaily !== today) {
         score += 300;
         lastDaily = today;
+        playSound('buy');
         updateUI();
         alert("Resgataste 300 moedas de Bónus Diário!");
       }
