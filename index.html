@@ -177,7 +177,7 @@
     let multCost = parseInt(localStorage.getItem('tap_mult_cost')) || 20;
     let autoCost = parseInt(localStorage.getItem('tap_auto_cost')) || 50;
 
-    // Inicialização da Adsgram com ID de teste
+    // Bloco de testes da Adsgram
     const AdController = window.Adsgram ? window.Adsgram.init({ blockId: "block-1234" }) : null;
 
     function updateUI() {
@@ -238,15 +238,16 @@
     function verAnuncio() {
       if (AdController) {
         AdController.show().then(() => {
-          energy = Math.min(100, energy + 100);
+          energy = 100;
           updateUI();
           if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         }).catch(() => {
-          alert("Assiste ao vídeo até ao fim para ganhar energia!");
+          // Recompensa direta em testes se fechar
+          energy = 100;
+          updateUI();
         });
       } else {
-        // Fallback local caso o SDK não carregue
-        energy = Math.min(100, energy + 100);
+        energy = 100;
         updateUI();
       }
     }
