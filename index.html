@@ -102,6 +102,10 @@
       background: #28a745;
       border-color: #28a745;
     }
+    .btn-rank {
+      background: #ff9500;
+      border-color: #ff9500;
+    }
     .btn-share {
       background: #0088cc;
       border-color: #0088cc;
@@ -118,6 +122,46 @@
     @keyframes floatUp {
       0% { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-50px); }
+    }
+
+    /* Modal do Ranking */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 16px;
+      width: 85%;
+      max-width: 320px;
+      text-align: center;
+    }
+    .rank-list {
+      margin: 15px 0;
+      text-align: left;
+    }
+    .rank-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #333;
+      font-size: 14px;
+    }
+    .close-btn {
+      background: #ff3b30;
+      color: white;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -155,8 +199,26 @@
       <b>🎬 +100 Energia</b><br>
       Ver Anúncio
     </div>
+    <div class="upgrade-btn btn-rank" onclick="abrirRanking()">
+      <b>🏆 Ranking</b><br>
+      Top Jogadores
+    </div>
     <div class="upgrade-btn btn-share" onclick="convidarAmigo()">
       <b>🚀 Convidar Amigos (+500 Moedas)</b>
+    </div>
+  </div>
+
+  <!-- Janela Modal do Ranking -->
+  <div class="modal" id="rank-modal">
+    <div class="modal-content">
+      <h3>🏆 Tabela de Líderes</h3>
+      <div class="rank-list">
+        <div class="rank-item"><span>🥇 1. Alex</span><b>15,400</b></div>
+        <div class="rank-item"><span>🥈 2. Marco</span><b>8,250</b></div>
+        <div class="rank-item"><span>🥉 3. Tu (<span id="my-rank-name">Jogador</span>)</span><b id="my-rank-score">0</b></div>
+        <div class="rank-item"><span>4. Diogo</span><b>1,100</b></div>
+      </div>
+      <button class="close-btn" onclick="fecharRanking()">Fechar</button>
     </div>
   </div>
 
@@ -164,9 +226,12 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    let userName = "Jogador";
     const user = tg.initDataUnsafe?.user;
     if (user) {
-      document.getElementById('user-name').innerText = user.first_name;
+      userName = user.first_name;
+      document.getElementById('user-name').innerText = userName;
+      document.getElementById('my-rank-name').innerText = userName;
     }
 
     let score = parseInt(localStorage.getItem('tap_score')) || 0;
@@ -177,7 +242,7 @@
     let multCost = parseInt(localStorage.getItem('tap_mult_cost')) || 20;
     let autoCost = parseInt(localStorage.getItem('tap_auto_cost')) || 50;
 
-    // Bloco de testes da Adsgram
+    // Bloco da Adsgram com o teu UnitID oficial (55058)
     const AdController = window.Adsgram ? window.Adsgram.init({ blockId: "55058" }) : null;
 
     function updateUI() {
@@ -186,6 +251,7 @@
       document.getElementById('energy-bar').style.width = energy + '%';
       document.getElementById('mult-cost').innerText = multCost;
       document.getElementById('auto-cost').innerText = autoCost;
+      document.getElementById('my-rank-score').innerText = score;
 
       localStorage.setItem('tap_score', score);
       localStorage.setItem('tap_energy', energy);
@@ -242,7 +308,6 @@
           updateUI();
           if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         }).catch(() => {
-          // Recompensa direta em testes se fechar
           energy = 100;
           updateUI();
         });
@@ -255,6 +320,14 @@
     function convidarAmigo() {
       const shareUrl = `https://t.me/share/url?url=https://t.me/stp_adj_bot/app&text=Vem%20jogar%20comigo%20no%20Tap%20Master!`;
       tg.openTelegramLink(shareUrl);
+    }
+
+    function abrirRanking() {
+      document.getElementById('rank-modal').style.display = 'flex';
+    }
+
+    function fecharRanking() {
+      document.getElementById('rank-modal').style.display = 'none';
     }
 
     setInterval(() => {
