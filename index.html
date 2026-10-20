@@ -98,19 +98,11 @@
     .upgrade-btn:active {
       opacity: 0.8;
     }
-    .btn-ad {
-      background: #28a745;
-      border-color: #28a745;
-    }
-    .btn-rank {
-      background: #ff9500;
-      border-color: #ff9500;
-    }
-    .btn-share {
-      background: #0088cc;
-      border-color: #0088cc;
-      grid-column: span 2;
-    }
+    .btn-ad { background: #28a745; border-color: #28a745; }
+    .btn-rank { background: #ff9500; border-color: #ff9500; }
+    .btn-task { background: #af52de; border-color: #af52de; }
+    .btn-share { background: #0088cc; border-color: #0088cc; }
+    
     .floating-text {
       position: absolute;
       font-size: 24px;
@@ -124,7 +116,7 @@
       100% { opacity: 0; transform: translateY(-50px); }
     }
 
-    /* Modal do Ranking */
+    /* Modais */
     .modal {
       display: none;
       position: fixed;
@@ -153,6 +145,15 @@
       border-bottom: 1px solid #333;
       font-size: 14px;
     }
+    .task-btn-action {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
     .close-btn {
       background: #ff3b30;
       color: white;
@@ -162,6 +163,7 @@
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -203,12 +205,17 @@
       <b>🏆 Ranking</b><br>
       Top Jogadores
     </div>
+    <div class="upgrade-btn btn-task" onclick="abrirTarefas()">
+      <b>🎁 Tarefas</b><br>
+      Bónus Diário
+    </div>
     <div class="upgrade-btn btn-share" onclick="convidarAmigo()">
-      <b>🚀 Convidar Amigos (+500 Moedas)</b>
+      <b>🚀 Convidar</b><br>
+      +500 Moedas
     </div>
   </div>
 
-  <!-- Janela Modal do Ranking -->
+  <!-- Modal do Ranking -->
   <div class="modal" id="rank-modal">
     <div class="modal-content">
       <h3>🏆 Tabela de Líderes</h3>
@@ -219,6 +226,20 @@
         <div class="rank-item"><span>4. Diogo</span><b>1,100</b></div>
       </div>
       <button class="close-btn" onclick="fecharRanking()">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Modal de Tarefas -->
+  <div class="modal" id="task-modal">
+    <div class="modal-content">
+      <h3>🎁 Tarefas e Bónus</h3>
+      <div class="rank-list">
+        <div class="rank-item">
+          <span>📅 Bónus Diário</span>
+          <button class="task-task-btn-action" id="daily-btn" onclick="claimDaily()">+300 🪙</button>
+        </div>
+      </div>
+      <button class="close-btn" onclick="fecharTarefas()">Fechar</button>
     </div>
   </div>
 
@@ -241,8 +262,8 @@
 
     let multCost = parseInt(localStorage.getItem('tap_mult_cost')) || 20;
     let autoCost = parseInt(localStorage.getItem('tap_auto_cost')) || 50;
+    let lastDaily = localStorage.getItem('tap_last_daily') || "";
 
-    // Bloco da Adsgram com o teu UnitID oficial (55058)
     const AdController = window.Adsgram ? window.Adsgram.init({ blockId: "55058" }) : null;
 
     function updateUI() {
@@ -253,12 +274,21 @@
       document.getElementById('auto-cost').innerText = autoCost;
       document.getElementById('my-rank-score').innerText = score;
 
+      const today = new Date().toDateString();
+      const dailyBtn = document.getElementById('daily-btn');
+      if (lastDaily === today) {
+        dailyBtn.innerText = "Resgatado";
+        dailyBtn.style.background = "#555";
+        dailyBtn.disabled = true;
+      }
+
       localStorage.setItem('tap_score', score);
       localStorage.setItem('tap_energy', energy);
       localStorage.setItem('tap_power', clickPower);
       localStorage.setItem('tap_auto', autoClick);
       localStorage.setItem('tap_mult_cost', multCost);
       localStorage.setItem('tap_auto_cost', autoCost);
+      localStorage.setItem('tap_last_daily', lastDaily);
     }
 
     function tapCoin(event) {
@@ -322,13 +352,20 @@
       tg.openTelegramLink(shareUrl);
     }
 
-    function abrirRanking() {
-      document.getElementById('rank-modal').style.display = 'flex';
+    function claimDaily() {
+      const today = new Date().toDateString();
+      if (lastDaily !== today) {
+        score += 300;
+        lastDaily = today;
+        updateUI();
+        alert("Resgataste 300 moedas de Bónus Diário!");
+      }
     }
 
-    function fecharRanking() {
-      document.getElementById('rank-modal').style.display = 'none';
-    }
+    function abrirRanking() { document.getElementById('rank-modal').style.display = 'flex'; }
+    function fecharRanking() { document.getElementById('rank-modal').style.display = 'none'; }
+    function abrirTarefas() { document.getElementById('task-modal').style.display = 'flex'; }
+    function fecharTarefas() { document.getElementById('task-modal').style.display = 'none'; }
 
     setInterval(() => {
       if (autoClick > 0) score += autoClick;
